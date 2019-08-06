@@ -85,8 +85,26 @@ def get_latency(trial, task):
 
 	return saccade_onset-target_offset
 
+def get_offset(trial, task):
 
-# define the intial saccade as the one with the largest amplitude
+	for event in trial:
+
+		# get target onset
+		if task == 'MGS':
+			if re.search(' FixationOff', event) or re.search(' FixationOff_T', event):
+				target_offset = np.int(event.split('MSG')[1].split(' ')[0].strip())
+				break
+		elif task == 'VGS' or task == 'GAP':
+			if re.search(' Target$', event):
+				target_offset = np.int(event.split('MSG')[1].split(' ')[0].strip())
+				break
+		else:
+			target_offset = np.nan
+
+	return target_offset
+
+
+# get define the intial saccade as the one with the largest amplitude.
 def get_initial_saccade(trial):
 
 	amps = []
@@ -169,7 +187,7 @@ def get_target_data(trial, ppd, xpixels, ypixels):
 
 	return target_x, target_y, target_t
 
-def get_saccade_data(trial, ppd, xpixels, ypixels):
+def get_saccade_data(trial, task, ppd, xpixels, ypixels):
 
 	# get saccades
 	saccades = get_saccades(trial)
@@ -195,10 +213,12 @@ def get_saccade_data(trial, ppd, xpixels, ypixels):
 
 		duration = saccade_t2 - saccade_t1
 
+		offset = get_offset(trial, task)
+
 		# collate
 		telemetry.append((saccade_x1, saccade_y1, saccade_t1, 
 						  saccade_x2, saccade_y2, saccade_t2, 
-						  duration, amplitude, peak_velocity))
+						  duration, offset, amplitude, peak_velocity))
 
 	return telemetry
 
@@ -215,7 +235,7 @@ def run_analysis(task, ppd, xpixels, ypixels, sampling_rate, base_path):
 			   'target_x', 'target_y', 'target_t',
 			   'saccade_x1', 'saccade_y1', 'saccade_t1',
 			   'saccade_x2', 'saccade_y2', 'saccade_t2',
-			   'saccade_number','duration', 'amplitude', 'peak_velocity']
+			   'saccade_number','duration', 'target_offset', 'amplitude', 'peak_velocity']
 
 	dfs = []
 	bad_trials = []
@@ -250,7 +270,7 @@ def run_analysis(task, ppd, xpixels, ypixels, sampling_rate, base_path):
 					target_x, target_y, target_t = get_target_data(trial, ppd, xpixels, ypixels)
 
 					# get all saccades in a trial
-					saccades = get_saccade_data(trial, ppd, xpixels, ypixels)
+					saccades = get_saccade_data(trial, task, ppd, xpixels, ypixels)
 
 					# loop over saccades
 					saccade_num = 0
@@ -264,7 +284,7 @@ def run_analysis(task, ppd, xpixels, ypixels, sampling_rate, base_path):
 								 target_x, target_y, target_t,
 								 saccade[0],saccade[1],saccade[2],
 								 saccade[3],saccade[4],saccade[5],
-								 saccade_num, saccade[6], saccade[7],saccade[8]]]
+								 saccade_num, saccade[6], saccade[7], saccade[8], saccade[9]]]
 
 						# create output
 						df = pd.DataFrame(data = data, columns=columns)
