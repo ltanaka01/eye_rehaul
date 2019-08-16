@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-# subdivide a single .asc into a sequence of trials, there should be 85 per file
+# subdivide a single .asc into a sequence of trials, there should be 85 (VGS tasks) per file
 def get_trials(filename, ppd, xpixels, ypixels, sampling_rate):
 
 	lines = open(filename).readlines()
@@ -104,7 +104,7 @@ def get_offset(trial, task):
 	return target_offset
 
 
-# get define the intial saccade as the one with the largest amplitude.
+# define the intial saccade as the one with the largest amplitude
 def get_initial_saccade(trial):
 
 	amps = []
